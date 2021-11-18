@@ -35,5 +35,8 @@ class Card(object):
 		self.arena = apiCard['arena']
 		self.description = apiCard['description']
 		self.imageURL = apiCard['imageURL']
+
 	def __repr__(self):
-		return f"<{self.key}, {self.name}, {self.elixir} elixir, {self.type}, {self.rarity}, arena {self.arena}, {self.imageURL}>"
+		return (f"<{self.name}, " 
+				f"{self.elixir} elixir, {self.type},"
+				f"{self.rarity}, arena {self.arena}, {self.imageURL}>")

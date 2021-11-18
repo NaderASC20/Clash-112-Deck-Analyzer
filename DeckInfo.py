@@ -27,11 +27,11 @@ spellCards = {'Earthquake', 'Zap', 'Arrows', 'Royal Delivery', 'Rage',
 				   'Barbarian Barrel', 'Fireball', 'Clone', 'Freeze', 'The Log',
 				   'Rocket', 'Poison', 'Mirror', 'Lightning', 'Torando', 'Snowball'}
 
-
 from Card import *
 class DeckInfo:
 	def __init__(self, deck):
 		self.deck = deck
+		self.suggestions = []
 		self.good = []
 		self.bad = []
 		self.cardTypesDict = self.getCardTypeCount()
@@ -60,7 +60,6 @@ class DeckInfo:
 				spellCardsList = cardTypes.get('spell card', [])
 				spellCardsList.append(name)
 				cardTypes['spell card'] = spellCardsList
-
 		return cardTypes
 
 	# Analyzes minimum needed # of cards for each card type
@@ -69,10 +68,10 @@ class DeckInfo:
 			troopList = self.cardTypesDict[key]
 			if len(troopList) == 1:
 				self.startScore -= 10
-				self.bad.append(f"You're only {key} is {troopList[0]}! Consider adding another {key}.")
+				self.suggestions.append(f"You're only {key} is {troopList[0]}! Consider adding another {key}.")
 			elif len(troopList) == 0:
 				self.startScore -= 10
-				self.bad.append(f"You don't have any {key}s in your deck! Consider adding 2 {key}s.")
+				self.suggestions.append(f"You don't have any {key}s in your deck! Consider adding 2 {key}s.")
 			else:
 				self.good.append(f"You have 2 {key}s. Great!")
 
@@ -105,10 +104,10 @@ class DeckInfo:
 
 	# Puts results in a readable string form
 	def __repr__(self):
-		analysis = ''''''
+		analysis = '''\n'''
 
 		deckList = [card.name for card in self.deck]
-		deck = f"Deck: {deckList}\n"
+		deck = f"Deck: {', '.join(deckList)}"
 
 		good = '''\nGood:\n'''
 		for comment in self.good:
@@ -117,10 +116,19 @@ class DeckInfo:
 		bad = '''\nBad:\n'''
 		for comment in self.bad:
 			bad += f"{comment}\n"
+		if bad == '''\nBad:\n''':
+			bad += "No bad comments!"
+
+		suggestions = '''\nSuggestions:\n'''
+		for comment in self.suggestions:
+			suggestions += f"{comment}\n"
+		if suggestions == '''\nSuggestions:\n''':
+			suggestions += "None!"
 
 		analysis += deck
 		analysis += good
 		analysis += bad
+		analysis += suggestions
 
 		analysis += f"\nThe total score for this deck is {self.deckScore}!"
 		return analysis

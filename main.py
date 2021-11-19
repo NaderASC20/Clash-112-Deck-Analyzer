@@ -48,6 +48,7 @@ def appStarted(app):
 	app.deck = [([0] * app.deckCols) for row in range(app.deckRows)]
 	app.cardImagesMatrix = initCardImages(app)
 	app.isDeckFull = False
+	app.analysis = None
 	# app.cardMatrix = initCardMatrix(app)
 
 def analyzeDeckHandler(app):
@@ -61,6 +62,7 @@ def analyzeDeckHandler(app):
 			prepDeck.append(cardObject)
 	analysis = DeckInfo(prepDeck)
 	print(analysis)
+	app.analysis = analysis
 
 # Controller
 ################################################
@@ -135,6 +137,8 @@ def redrawAll(app, canvas):
 	drawCardsMatrixImages(app, canvas)
 	drawInputDeck(app, canvas)
 	drawAnalyzeButton(app, canvas)
+	if app.analysis != None:
+		canvas.create_text(20, 100, text=f'{app.analysis}', font='Arial 10 bold', anchor=NW)
 	# drawButton(app, canvas)
 	# drawCardsList(app, canvas)
 
@@ -187,7 +191,7 @@ def drawCardsMatrixImages(app, canvas):
 			if app.cardImagesMatrix[row][col] != 0:
 				# canvas.create_rectangle(x0, y0, x1, y1, fill='green')
 				# canvas.create_rectangle(x0, y0, x1, y1, fill='red')
-				# canvas.create_text(x, y, text='no images \nfolder', font='Arial 8 bold')
+				canvas.create_text(x, y, text='no \nimages \nfolder', font='Arial 8 bold')
 				cachedImage = app.cardImagesMatrix[row][col]['image']
 				canvas.create_image(x, y, image=ImageTk.PhotoImage(cachedImage))
 

@@ -1,7 +1,13 @@
 from Card import *
 from DeckInfo import *
 from cmu_112_graphics import *
+from cardsInfo import *
+from allCards import *
 
+# From
+# https://stackoverflow.com/questions/42671252/
+# python-pillow-valueerror-decompressed-data-too-large
+# Used to remove limitation on max data to cache for photos
 from PIL import PngImagePlugin
 LARGE_ENOUGH_NUMBER = 100
 PngImagePlugin.MAX_TEXT_CHUNK = LARGE_ENOUGH_NUMBER * (1024**2)
@@ -13,7 +19,6 @@ testDeck = [Card(cardsInfo['Cannon']), Card(cardsInfo['Fireball']),
 			Card(cardsInfo['Musketeer']), Card(cardsInfo['Ice Spirit'])]
 
 testDeckAnalysis = DeckInfo(testDeck)
-
 # Model
 ################################################
 def initCardImages(app):
@@ -22,10 +27,10 @@ def initCardImages(app):
 	for row in range(app.cardArrayRows):
 		for col in range(app.cardArrayCols):
 				if index >= len(allCards): break
-				tempImage = app.loadImage(f'card-images/{allCards[index].name}.png')
+				tempImage = app.loadImage(f"card-images/{allCards[index]['name']}.png")
 				scaledImage = app.scaleImage(tempImage, 1/4)
 				lessScaledImage = app.scaleImage(tempImage, 1/3)
-				result[row][col] = {'name': allCards[index].name, 
+				result[row][col] = {'name': allCards[index]['name'], 
 									'image': scaledImage, 'big-image': lessScaledImage}
 				index += 1
 	return result

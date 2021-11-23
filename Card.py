@@ -3,29 +3,7 @@ import clashroyale
 from dotenv import load_dotenv
 from cmu_112_graphics import *
 import os
-
-# Sets up clash royale api
-load_dotenv()
-officialClient = clashroyale.official_api.Client(os.getenv('CLASH_TOKEN'))
-royaleClient = clashroyale.royaleapi.Client(os.getenv('CLASH_TOKEN'))
-
-needInfo = []
-
-# Gets all cards and maps them by card name in cardInfo dict
-allCards = officialClient.get_all_cards()
-cardsInfo = dict()
-for card in range(len(allCards)):
-	cardName = allCards[card].name
-	info = officialClient.get_card_info(cardName)
-	if info != None:
-		cardsInfo[cardName] = dict(officialClient.get_card_info(cardName))
-	else:
-		needInfo.append(cardName)
-		cardsInfo[cardName] = {'name': cardName, 'alert': 'NO INFO FROM ROAYLE API'}
-
-for i in range(len(allCards)):
-	cardName = allCards[i].name
-	cardsInfo[cardName]['imageURL'] = allCards[i]['iconUrls']['medium']
+from cardsInfo import *
 
 # Card class which takes card dict from api results
 class Card(object):

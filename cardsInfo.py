@@ -680,6 +680,7 @@ cardsInfo = {
                     'elixir': 3,
                     'imageURL': 'https://api-assets.clashroyale.com/cards/300/c1rL3LO1U2D9-TkeFfAC18gP3AO8ztSwrcHMZplwL2Q.png'},
     'Elixir Golem': {'name': 'Elixir Golem',
+                    'elixir': 3,
                      'alert': 'NO INFO FROM ROAYLE API',
                      'imageURL': 'https://api-assets.clashroyale.com/cards/300/puhMsZjCIqy21HW3hYxjrk_xt8NIPyFqjRy-BeLKZwo.png'},
     'Battle Healer': {'name': 'Battle Healer',

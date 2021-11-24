@@ -98,7 +98,7 @@ def getAllSynergies(cardName):
         synergies = swarmHelperSpells + smallSpell
         return synergies
     if cardName in splash:
-        synergies = tank + buildingRush + singleTargetdps + buildingAttackTank
+        synergies = tank + buildingRush + buildingAttackTank
         return synergies
     if cardName in singleTargetdps:
         synergies = (splash + smallSpell + buildingRush + 
@@ -276,6 +276,7 @@ def getCardSwapReccomendations(deck, matchup):
         if (bestSynergy == None) or (synergyCountDict[key] > bestCount):
             bestCount = synergyCountDict[key]
             bestSynergy = key
+    print(synergyCountDict)
     return bestSynergy, synergiesDict[bestSynergy], synergyCountDict
 
 # Matchup between two decks. Returns cards that counter and a suggestion
@@ -294,8 +295,5 @@ class Matchup(object):
             total += cardsInfo[card]['elixir']
         return round(total / 8, 1)
     def __repr__(self):
-        string = f"{', '.join(self.deck)}\nAverage elixir: {self.getAverageElixir(self.deck)}\n\t\t\tV.S.\n{', '.join(self.matchup)}\nAverage elixir: {self.getAverageElixir(matchup)}\n\nThe weakest card in your deck is this matchup is {self.counteredCard}.\n{self.counteredCard} get countered by {', '.join(self.counters)} from the opposing deck.\nWe suggest you replace {self.counteredCard} with {self.suggestion}.\n{self.suggestion} synergizes very well with {', '.join(self.suggestionBestSynergy)}."
+        string = f"{', '.join(self.deck)}\nAverage elixir: {self.getAverageElixir(self.deck)}\n\t\t\tV.S.\n{', '.join(self.matchup)}\nAverage elixir: {self.getAverageElixir(matchup)}\n\nThe weakest card in your deck in this matchup is {self.counteredCard}.\n{self.counteredCard} get countered by \n{', '.join(self.counters)} from the opposing deck.\nWe suggest you replace {self.counteredCard} with {self.suggestion}.\n{self.suggestion} synergizes very well with \n{', '.join(self.suggestionBestSynergy)}.\n\nMore deck matchups coming soon!"
         return string
-
-test = Matchup(deck, matchup)
-print(test)

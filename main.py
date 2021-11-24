@@ -36,27 +36,27 @@ def initCardImages(app):
 				index += 1
 	return result
 
-def appStarted(app):
-	# Matrix data
-	app.deckRows = 2
-	app.deckCols = 4
-	app.cardArrayRows = 6
-	app.cardArrayCols = 18
+def resetApp(app):
+	app.state = 'createDeck'	
 	app.currDeckRow = 0
 	app.currDeckCol = 0
-	# Positions and Margins
+	app.deck = [([0] * app.deckCols) for row in range(app.deckRows)]
+	app.isDeckFull = False
+	app.analysis = None
+
+def appStarted(app):
 	app.buttonY = 300
 	app.buttonX = (app.width ) // 2
 	app.deckMargin = 500
 	app.deckHeight = app.height//4.3
 	app.margin = 40
 	app.inputDeckWrapperPadding = 45
-	app.deck = [([0] * app.deckCols) for row in range(app.deckRows)]
+	app.deckRows = 2
+	app.deckCols = 4
+	app.cardArrayRows = 6
+	app.cardArrayCols = 18
+	resetApp(app)
 	app.cardImagesMatrix = initCardImages(app)
-	app.isDeckFull = False
-	app.analysis = None
-	# app.cardMatrix = initCardMatrix(app)
-	app.state = 'createDeck'
 
 def analyzeDeckHandler(app):
 	prepDeck = []
@@ -67,6 +67,7 @@ def analyzeDeckHandler(app):
 	analysis = Matchup(prepDeck, matchup)
 	print(analysis)
 	app.analysis = analysis
+	app.state = 'analysis'
 
 # Controller
 ################################################
@@ -77,15 +78,19 @@ def keyPressed(app, event):
 	pass
 
 def mousePressed(app, event):
+	print(app.state)
 	(x0, y0, x1, y1) = getButtonBounds(app)
-	if ((app.isDeckFull) and 
-		(x0 <= event.x <= x1) and 
-		(y0 <= event.y <= y1)):
-		response = analyzeDeckHandler(app)
-		if response != None:
-			print(f"no info avaiable for {response}")
-		return
-
+	if app.state =='createDeck':
+		if ((app.isDeckFull) and 
+			(x0 <= event.x <= x1) and 
+			(y0 <= event.y <= y1)):
+			analyzeDeckHandler(app)
+			return
+	elif app.state == 'analysis':
+		if ((x0 <= event.x <= x1) and 
+			(y0 <= event.y <= y1)):
+			resetApp(app)
+			return
 	for row in range(app.cardArrayRows):
 		for col in range(app.cardArrayCols):
 			(x0, y0, x1, y1) = getDeckListBounds(app, row, col)
@@ -137,19 +142,22 @@ def getDeckListBounds(app, row, col):
 # View
 ################################################
 def redrawAll(app, canvas):
+	drawInputDeck(app, canvas)
+	drawInputDeckContainer(app, canvas)
+	drawCardsMatrixImages(app, canvas)
 	if app.state == 'createDeck':
-		drawInputDeckContainer(app, canvas)
-		drawCardsMatrixImages(app, canvas)
-		drawInputDeck(app, canvas)
 		drawAnalyzeButton(app, canvas)
-		if app.analysis != None:
-			canvas.create_text(20, 100, text=f'{app.analysis}', font='Arial 10 bold', anchor=NW)
-		# drawButton(app, canvas)
-		# drawCardsList(app, canvas)
+		# canvas.create_text(20, 100, text=f'{app.analysis}', font='Arial 10 bold', anchor=NW)
 	elif app.state == 'analysis':
-		# drawBackgroundContainer(app, canvas)
-		# drawMatchups(app, canvas)
+		drawClearButton(app, canvas)
+		canvas.create_text(10, 100, text=f'{app.analysis}', font='Arial 10 bold', anchor=NW, fill='red')
 
+def drawClearButton(app, canvas):
+	if app.isDeckFull:
+		(x0, y0, x1, y1) = getButtonBounds(app)
+		canvas.create_rectangle(x0, y0, x1, y1, fill='gray', width=2)
+		cx, cy = (x0+x1)//2, (y0+y1)//2
+		canvas.create_text(cx,cy, text="Clear", fill='black', font='Arial 24 bold')
 
 def drawAnalyzeButton(app, canvas):
 	if app.isDeckFull:

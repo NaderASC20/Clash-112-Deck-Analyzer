@@ -121,9 +121,9 @@ def getAllSynergies(cardName):
     if cardName in spawnerBuildings:
         synergies = bigSpell
         return synergies
-    if cardName in defensiveTowers:
-        synergies = allCategories
-        return synergies
+    # if cardName in defensiveTowers:
+    #     synergies = allCategories
+    #     return synergies
     else:
         return []
 
@@ -175,6 +175,13 @@ def getCountersForCard(card):
     addCounterWeightings(counters, card, allCounters)
     return counters.graph
 
+# Gest synergies for a single card
+def getSynergiesForCard(card):
+    synergies = Graph()
+    allSynergies = getAllSynergies(card)
+    addSynergyWeightings(synergies, card, allSynergies)
+    return synergies.graph
+
 # Gets counters and synergies for 2 input decks
 def getCountersAndSynergiesDicts(deck, matchup):
     deckCounters = Graph()
@@ -225,20 +232,9 @@ def getMatchupCounters(deck, matchup):
                 counteredCards[counter].add(key)
     return counterCount, counteredCards
 
-# Change this to get the most countered card in your deck
-def getBestCounterAgainstDeckFromMatchup(deck, matchup):
-    counters = getMatchupCounters(deck, matchup)
-    countersCount = counters[0]
-    bestDeckCounter = None
-    bestNum = None
-    for key in countersCount:
-        if bestNum == None or countersCount[key] > bestNum:
-            bestDeckCounter = key
-            bestNum = countersCount[key]
-    
+# Gets the card  in deck that is most countered by the matchup
 def getMostCounteredCardFromDeckAgainstMatchup(deck, matchup):
-    counters = getMatchupCounters(deck, matchup)
-    counters = counters[1]
+    counters = getMatchupCounters(deck, matchup)[1]
     counterCounts = {}
     counteredDict = {}
     for key in counters:
@@ -248,14 +244,58 @@ def getMostCounteredCardFromDeckAgainstMatchup(deck, matchup):
                 counterCounts[deckCard] = 0
             counteredDict[deckCard].add(key)
             counterCounts[deckCard] += 1
-    return counteredDict, counterCounts
+    mostCountered = None
+    bestCounterCount = None
+    for key in counterCounts:
+        if (mostCountered == None) or (counterCounts[key] > bestCounterCount):
+            bestCounterCount = counterCounts[key]
+            mostCountered = key
+    return mostCountered, counteredDict[mostCountered]
 
+# Finds synergy with most synergies with other cards in deck
+# Ties broken randomly
 def getCardSwapReccomendations(deck, matchup):
-    bestCounter = getBestCounterAgainstDeckFromMatchup(deck, matchup)
-    return
+    bestCounter = getMostCounteredCardFromDeckAgainstMatchup(deck, matchup)[0]
+    deckMinusCounter = copy.deepcopy(deck)
+    deckMinusCounter.remove(bestCounter)
+    synergiesDict = {}
+    synergyCountDict = {}
+    for card in deck:
+        synergies = getAllSynergies(card)
+        for synergy in synergies:
+            if synergy not in deck and synergy != bestCounter:
+                if synergy not in synergiesDict:
+                    synergiesDict[synergy] = set()
+                synergiesDict[synergy].add(card)
+                if synergy not in synergyCountDict:
+                    synergyCountDict[synergy] = 0
+                synergyCountDict[synergy] += 1
+    bestSynergy = None
+    bestCount = None
+    for key in synergyCountDict:
+        if (bestSynergy == None) or (synergyCountDict[key] > bestCount):
+            bestCount = synergyCountDict[key]
+            bestSynergy = key
+    return bestSynergy, synergiesDict[bestSynergy], synergyCountDict
 
-print(getMatchupCounters(deck, matchup)[1])
-# print()
-# print(getMatchupCounters(deck, matchup)[1])
+# Matchup between two decks. Returns cards that counter and a suggestion
+# To replace the weakest link in your deck. Uses graph algo and counters algo
+class Matchup(object):
+    def __init__(self, deck, matchup):
+        self.deck = deck 
+        self.matchup = matchup
+        self.suggestion = getCardSwapReccomendations(self.deck, self.matchup)[0]
+        self.suggestionBestSynergy = getCardSwapReccomendations(self.deck, self.matchup)[1]
+        self.counteredCard = getMostCounteredCardFromDeckAgainstMatchup(self.deck, self.matchup)[0]
+        self.counters = list(getMostCounteredCardFromDeckAgainstMatchup(self.deck, self.matchup)[1])
+    def getAverageElixir(self, someDeck):
+        total = 0
+        for card in someDeck:
+            total += cardsInfo[card]['elixir']
+        return round(total / 8, 1)
+    def __repr__(self):
+        string = f"{', '.join(self.deck)}\nAverage elixir: {self.getAverageElixir(self.deck)}\n\t\t\tV.S.\n{', '.join(self.matchup)}\nAverage elixir: {self.getAverageElixir(matchup)}\n\nThe weakest card in your deck is this matchup is {self.counteredCard}.\n{self.counteredCard} get countered by {', '.join(self.counters)} from the opposing deck.\nWe suggest you replace {self.counteredCard} with {self.suggestion}.\n{self.suggestion} synergizes very well with {', '.join(self.suggestionBestSynergy)}."
+        return string
 
-# print(getCardSwapReccomendations(deck, matchup))
+test = Matchup(deck, matchup)
+print(test)

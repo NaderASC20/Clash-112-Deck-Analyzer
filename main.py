@@ -1,5 +1,6 @@
 from Card import *
 from DeckInfo import *
+from NewAlgo import *
 from cmu_112_graphics import *
 from cardsInfo import *
 from allCards import *
@@ -55,17 +56,15 @@ def appStarted(app):
 	app.isDeckFull = False
 	app.analysis = None
 	# app.cardMatrix = initCardMatrix(app)
+	app.state = 'createDeck'
 
 def analyzeDeckHandler(app):
 	prepDeck = []
 	for row in range(app.deckRows):
 		for col in range(app.deckCols):
 			name = app.deck[row][col]['name']
-			if 'elixir' not in cardsInfo[name]:
-				return name
-			cardObject = Card(cardsInfo[name])
-			prepDeck.append(cardObject)
-	analysis = DeckInfo(prepDeck)
+			prepDeck.append(name)
+	analysis = Matchup(prepDeck, matchup)
 	print(analysis)
 	app.analysis = analysis
 
@@ -138,14 +137,19 @@ def getDeckListBounds(app, row, col):
 # View
 ################################################
 def redrawAll(app, canvas):
-	drawInputDeckContainer(app, canvas)
-	drawCardsMatrixImages(app, canvas)
-	drawInputDeck(app, canvas)
-	drawAnalyzeButton(app, canvas)
-	if app.analysis != None:
-		canvas.create_text(20, 100, text=f'{app.analysis}', font='Arial 10 bold', anchor=NW)
-	# drawButton(app, canvas)
-	# drawCardsList(app, canvas)
+	if app.state == 'createDeck':
+		drawInputDeckContainer(app, canvas)
+		drawCardsMatrixImages(app, canvas)
+		drawInputDeck(app, canvas)
+		drawAnalyzeButton(app, canvas)
+		if app.analysis != None:
+			canvas.create_text(20, 100, text=f'{app.analysis}', font='Arial 10 bold', anchor=NW)
+		# drawButton(app, canvas)
+		# drawCardsList(app, canvas)
+	elif app.state == 'analysis':
+		# drawBackgroundContainer(app, canvas)
+		# drawMatchups(app, canvas)
+
 
 def drawAnalyzeButton(app, canvas):
 	if app.isDeckFull:
@@ -196,7 +200,7 @@ def drawCardsMatrixImages(app, canvas):
 			if app.cardImagesMatrix[row][col] != 0:
 				# canvas.create_rectangle(x0, y0, x1, y1, fill='green')
 				# canvas.create_rectangle(x0, y0, x1, y1, fill='red')
-				canvas.create_text(x, y, text='no \nimages \nfolder', font='Arial 8 bold')
+				# canvas.create_text(x, y, text='no \nimages \nfolder', font='Arial 8 bold')
 				cachedImage = app.cardImagesMatrix[row][col]['image']
 				canvas.create_image(x, y, image=ImageTk.PhotoImage(cachedImage))
 

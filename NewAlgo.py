@@ -1,8 +1,7 @@
 from Card import *
+
 from DeckInfo import *
 import random
-
-# from Main import *
 from cardsInfo import *
 from allCards import *
 
@@ -21,12 +20,10 @@ singleTargetdps = [
     "Elite Barbarians",
     "Sparky",
     "Cannon Cart",
-    "Wizard",
     "Golden Knight",
     "Hunter",
     "Lumberjack",
     "Inferno Dragon",
-    "Magic Archer",
     "Musketeer",
     "Mini P.E.K.K.A",
     "Flying Machine",
@@ -49,7 +46,6 @@ splash = [
     "Skeleton Dragons",
     "Baby Dragon",
     "Dark Prince",
-    "Hunter",
     "Magic Archer",
     "Valkyrie",
     "Zappies",
@@ -84,7 +80,6 @@ buildingRush = [
 
 smallSpell = [
     "Arrows",
-    "Tornado",
     "Earthquake",
     "Zap",
     "Giant Snowball",
@@ -117,7 +112,6 @@ buildingAttackTank = [
 
 stunsAndDistractions = [
     "Freeze",
-    "Zap",
     "Ice Spirit",
     "Electro Wizard",
     "Tornado",
@@ -156,10 +150,6 @@ allCategories = (
     + spawnerBuildings
     + other
 )
-
-# for card in cardsInfo:
-#     if card not in bigList:
-#         print(card)
 
 
 def getAllCounters(cardName):
@@ -237,26 +227,13 @@ def getAllSynergies(cardName):
         synergies = bigSpell
         return synergies
     if cardName in buildingRush:
-        synergies = (
-            splash
-            + smallSpell
-            + bigSpell
-            + tank
-            + singleTargetdps
-            + stunsAndDistractions
-        )
+        synergies = splash + smallSpell + bigSpell + tank + singleTargetdps
         return synergies
     if cardName in tank:
         synergies = singleTargetdps + splash + smallSpell
         return synergies
     if cardName in buildingAttackTank:
-        synergies = (
-            splash
-            + smallSpell
-            + bigSpell
-            + singleTargetdps
-            + stunsAndDistractions
-        )
+        synergies = splash + smallSpell + bigSpell + singleTargetdps
         return synergies
     if cardName in spawnerBuildings:
         synergies = bigSpell
@@ -277,10 +254,6 @@ def getAllSynergies(cardName):
         return synergies
     else:
         return []
-    # if cardName in defensiveTowers:
-    #     synergies = allCategories
-    #     return synergies
-    # stuns and distractions, swam helper spells, defensive tower, other
 
 
 class Graph(object):
@@ -311,16 +284,16 @@ def addSynergyWeightings(cardSynergiesGraph, cardName, allSynergies):
             cardSynergiesGraph.addEdge(cardName, synergy, 1)
 
 
-# deck = [
-#     "Cannon",
-#     "Fireball",
-#     "Skeletons",
-#     "Ice Golem",
-#     "The Log",
-#     "Hog Rider",
-#     "Musketeer",
-#     "Ice Spirit",
-# ]
+deck = [
+    "Cannon",
+    "Fireball",
+    "Skeletons",
+    "Ice Golem",
+    "The Log",
+    "Hog Rider",
+    "Musketeer",
+    "Ice Spirit",
+]
 
 matchup = [
     "Balloon",
@@ -333,31 +306,47 @@ matchup = [
     "Tornado",
 ]
 
-# metaDeck1 = ['Barbarian Barrel','Fireball','Flying Machine', 'Goblin Cage',
-#             'Golden Knight', 'Royal Hogs', 'Royal Recruits', 'Zappies']
-# deck = [
-#     "Balloon",
-#     "Fireball",
-#     "Guards",
-#     "Lava Hound",
-#     "Mega Minion",
-#     "Skeleton Dragons",
-#     "Tombstone",
-#     "Zap",
-# ]
-deck = [
+metaDeck1 = [
     "Barbarian Barrel",
+    "Fireball",
+    "Flying Machine",
+    "Goblin Cage",
+    "Golden Knight",
+    "Royal Hogs",
+    "Royal Recruits",
+    "Zappies",
+]
+metaDeck2 = [
+    "Archer Queen",
+    "Bandit",
+    "Barbarian Barrel",
+    "Electro Spirit",
+    "Royal Ghost",
+    "Lightning",
+    "Mega Knight",
+    "Ram Rider",
+]
+metaDeck3 = [
+    "Golden Knight",
     "Bats",
-    "Giant Snowball",
-    "Inferno Tower",
     "Miner",
     "Poison",
-    "Prince",
-    "Spear Goblins",
+    "Royal Delivery",
+    "Skeletons",
+    "Tesla",
+    "The Log",
 ]
-# metaDeck4 =
-# metaDeck5 =
-# metaDeck6 =
+metaDeck4 = [
+    "Bandit",
+    "Royal Ghost",
+    "Magic Archer",
+    "P.E.K.K.A",
+    "Poison",
+    "Battle Ram",
+    "Zap",
+    "Electro Wizard",
+]
+decks = [metaDeck1, metaDeck2, metaDeck3, metaDeck4]
 
 # Gets counters for a single card
 
@@ -401,26 +390,25 @@ def getCountersAndSynergiesDicts(deck, matchup):
     return deckCounters, deckSynergies, matchupCounters, matchupSynergies
 
 
-# Check if a card that counters a deck gets countered by a different card in the deck
+# Check if a card that counters a deck gets countered by >3 cards in the other deck
 
 
-def notCounteredByAnotherCardInDeck(counter, deck):
+def notCounteredByAnotherCardInDeck(counter, deck, weight):
     countersForCard = getCountersForCard(counter)
     if len(countersForCard) < 1:
         return True
     countersForCard = countersForCard[counter]
-    # print('Counters for ', counter, ":", countersForCard)
+    count = 0
     for key in countersForCard:
         if key in deck:
-            print(key, "is in the deck so", counter, "is counter-countered!")
-            return False
-    return True
+            count += 1
+    return count <= weight
 
 
 # Gets which cards in the matchup counters the deck
 
 
-def getMatchupCounters(deck, matchup):
+def getMatchupCounters(deck, matchup, weight):
     deckCounters = getCountersAndSynergiesDicts(deck, matchup)[0]
     counterCount = {}
     counteredCards = {}
@@ -430,19 +418,20 @@ def getMatchupCounters(deck, matchup):
             if counter in matchup:
                 if counter not in counterCount:
                     counterCount[counter] = 0
-                # if notCounteredByAnotherCardInDeck(counter, deck):
-                counterCount[counter] += 1
-                if counter not in counteredCards:
-                    counteredCards[counter] = set()
-                counteredCards[counter].add(key)
+                if notCounteredByAnotherCardInDeck(counter, deck, weight):
+                    counterCount[counter] += 1
+                    if counter not in counteredCards:
+                        counteredCards[counter] = set()
+                    counteredCards[counter].add(key)
+    # print(counteredCards)
     return counterCount, counteredCards
 
 
 # Gets the card  in deck that is most countered by the matchup
 
 
-def getMostCounteredCardFromDeckAgainstMatchup(deck, matchup):
-    counters = getMatchupCounters(deck, matchup)[1]
+def getMostCounteredCardFromDeckAgainstMatchup(deck, matchup, weight=2):
+    counters = getMatchupCounters(deck, matchup, weight)[1]
     counterCounts = {}
     counteredDict = {}
     for key in counters:
@@ -458,6 +447,10 @@ def getMostCounteredCardFromDeckAgainstMatchup(deck, matchup):
         if (mostCountered == None) or (counterCounts[key] > bestCounterCount):
             bestCounterCount = counterCounts[key]
             mostCountered = key
+    if mostCountered == None or counteredDict[mostCountered] == None:
+        return getMostCounteredCardFromDeckAgainstMatchup(
+            deck, matchup, weight + 1
+        )
     return mostCountered, counteredDict[mostCountered]
 
 
@@ -487,8 +480,12 @@ def getCardSwapReccomendations(deck, matchup):
     for key in synergyCountDict:
         if (bestSynergy == None) or (synergyCountDict[key] > bestCount):
             bestCount = synergyCountDict[key]
-            bestSynergy = key
-    print(synergyCountDict)
+            bestSynergy = {key}
+        elif synergyCountDict[key] == bestCount:
+            bestSynergy.add(key)
+    if type(bestSynergy) == set:
+        bestList = list(bestSynergy)
+        bestSynergy = bestList[random.randint(0, len(bestList) - 1)]
     return bestSynergy, synergiesDict[bestSynergy], synergyCountDict
 
 
@@ -499,6 +496,8 @@ random.shuffle(cards)
 
 # Checks if a certain card addition has counters >=4 cards in the matchup
 # and has some synergies in the current deck
+
+
 def foundBestCard(testCard, counterDeckSoFar, matchup):
     if len(counterDeckSoFar) < 5 and testCard in spellCards:
         return False
@@ -550,7 +549,6 @@ def findBestCounterDeck(matchup):
 
 # Backtracking function to find a counter deck
 def findBestCounterDeckHelper(counterDeckSoFar, matchup):
-    print(counterDeckSoFar)
     if len(counterDeckSoFar) == 8 and isDiverseDeck(counterDeckSoFar):
         return counterDeckSoFar
     else:
@@ -576,12 +574,10 @@ class Matchup(object):
     def __init__(self, deck, matchup):
         self.deck = deck
         self.matchup = matchup
-        self.suggestion = getCardSwapReccomendations(self.deck, self.matchup)[
-            0
-        ]
+        self.suggestion = getCardSwapReccomendations(self.deck, self.matchup)[0]
         self.suggestionBestSynergy = getCardSwapReccomendations(
             self.deck, self.matchup
-        )[2]
+        )[1]
         self.suggestionCounters = getCardSwapReccomendations(
             self.deck, self.matchup
         )[1]
@@ -589,10 +585,17 @@ class Matchup(object):
             self.deck, self.matchup
         )[0]
         self.counters = list(
-            getMostCounteredCardFromDeckAgainstMatchup(
-                self.deck, self.matchup
-            )[1]
+            getMostCounteredCardFromDeckAgainstMatchup(self.deck, self.matchup)[
+                1
+            ]
         )
+        tempDeck = copy.deepcopy(deck)
+        tempDeck.remove(self.counteredCard)
+        tempDeck.append(self.suggestion)
+        unroundedElixirChange = self.getAverageElixir(
+            deck
+        ) - self.getAverageElixir(tempDeck)
+        self.elixirChange = round(unroundedElixirChange, 1)
 
     def getAverageElixir(self, someDeck):
         total = 0
@@ -601,5 +604,8 @@ class Matchup(object):
         return round(total / 8, 1)
 
     def __repr__(self):
-        string = f"{', '.join(self.deck)}\nAverage elixir: {self.getAverageElixir(self.deck)}\n\t\t\tV.S.\n{', '.join(self.matchup)}\nAverage elixir: {self.getAverageElixir(matchup)}\n\nThe weakest card in your deck in this matchup is {self.counteredCard}.\n{self.counteredCard} get countered by \n{', '.join(self.counters)} from the opposing deck.\nWe suggest you replace {self.counteredCard} with {self.suggestion}.\n{self.suggestion} synergizes very well with \n{', '.join(self.suggestionBestSynergy)}.\n{self.suggestion} counters \n{', '.join(self.suggestionCounters)}.\n\nMore deck matchups coming soon!"
+        string = f"{', '.join(self.deck)}\nAverage elixir: {self.getAverageElixir(self.deck)}\n\t\t\tV.S.\n{', '.join(self.matchup)}\nAverage elixir: {self.getAverageElixir(matchup)}\n\nThe weakest card in your deck in this matchup is {self.counteredCard}.\n{self.counteredCard} get countered by \n{', '.join(self.counters)} from the opposing deck.\nWe suggest you replace {self.counteredCard} with {self.suggestion}.\n{self.suggestion} synergizes very well with \n{', '.join(self.suggestionBestSynergy)}.\n"
         return string
+
+
+# print(Matchup(deck, matchup))

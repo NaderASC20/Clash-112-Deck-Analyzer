@@ -242,7 +242,3 @@ class DeckInfo:
 
         analysis += f"\nThe total score for this deck is {self.deckScore}!"
         return analysis
-
-
-class CommonMatchupInfo(object):
-    pass

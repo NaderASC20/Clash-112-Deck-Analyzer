@@ -593,8 +593,8 @@ class Matchup(object):
         tempDeck.remove(self.counteredCard)
         tempDeck.append(self.suggestion)
         unroundedElixirChange = self.getAverageElixir(
-            deck
-        ) - self.getAverageElixir(tempDeck)
+            tempDeck
+        ) - self.getAverageElixir(deck)
         self.elixirChange = round(unroundedElixirChange, 1)
 
     def getAverageElixir(self, someDeck):

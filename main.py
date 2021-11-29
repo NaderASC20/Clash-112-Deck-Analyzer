@@ -1,7 +1,7 @@
 from Card import *
 
 # from DeckInfo import *
-from NewAlgo import *
+from MatchupAlgo import *
 from cmu_112_graphics import *
 from cardsInfo import *
 from allCards import *
@@ -134,13 +134,26 @@ def initCounterAndSuggestionData(app, matchup):
 
 
 def initAnalysisInfo(app):
-    app.matchups = [metaDeck1, metaDeck2, metaDeck3, metaDeck4]
     allAnalysis = dict()
     deck = app.prepDeck
-    app.matchup1 = Matchup(deck, metaDeck1)
-    app.matchup2 = Matchup(deck, metaDeck2)
-    app.matchup3 = Matchup(deck, metaDeck3)
-    app.matchup4 = Matchup(deck, metaDeck4)
+    matchups = [metaDeck1, metaDeck2, metaDeck3, metaDeck4]
+
+    rand1 = random.randint(0, len(matchups) - 1)
+    app.matchup1 = Matchup(deck, matchups[rand1])
+    matchups.pop(rand1)
+
+    rand2 = random.randint(0, len(matchups) - 1)
+    app.matchup2 = Matchup(deck, matchups[rand2])
+    matchups.pop(rand2)
+
+    rand3 = random.randint(0, len(matchups) - 1)
+    app.matchup3 = Matchup(deck, matchups[rand3])
+    matchups.pop(rand3)
+
+    rand4 = random.randint(0, len(matchups) - 1)
+    app.matchup4 = Matchup(deck, matchups[rand4])
+    matchups.pop(rand4)
+
     allAnalysis = {
         1: app.matchup1,
         2: app.matchup2,
@@ -531,6 +544,37 @@ def drawMyDeck(app, canvas):
                 image=ImageTk.PhotoImage(app.smallDeck[row][col]),
             )
             i += 1
+    avgElixir = Matchup(app.prepDeck, app.prepDeck).getAverageElixir(
+        app.prepDeck
+    )
+    if avgElixir <= 3.5:
+        color = "green"
+        text = "LOW"
+    elif avgElixir <= 4.0:
+        color = "orange"
+        text = "MEDIUM"
+    else:
+        color = "red"
+        text = "HIGH"
+    canvas.create_text(
+        782,
+        app.height - 30,
+        text=str(avgElixir),
+        font="Arial 16 bold",
+        fill="black",
+    )
+    canvas.create_image(
+        758,
+        app.height - 30,
+        image=ImageTk.PhotoImage(app.elixirImage),
+    )
+    canvas.create_text(
+        830,
+        app.height - 30,
+        text=text,
+        font="Arial 16 bold",
+        fill=color,
+    )
 
 
 def drawAnalysisPopup(app, canvas):

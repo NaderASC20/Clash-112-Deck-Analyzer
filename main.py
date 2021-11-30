@@ -5,6 +5,7 @@ from MatchupAlgo import *
 from cmu_112_graphics import *
 from cardsInfo import *
 from allCards import *
+from Simulation import *
 
 # From
 # https://stackoverflow.com/questions/42671252/

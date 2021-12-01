@@ -418,16 +418,16 @@ def checkForDeaths(app):
             ):
                 if playerCard.cardName in getAllCounters(enemyCard.cardName):
                     app.message = (
-                        f"{enemyCard.cardName} counters {playerCard.cardName}!"
-                    )
-                    playerCard.kill(app)
-                    enemyCard.reroute(app)
-                if enemyCard.cardName in getAllCounters(playerCard.cardName):
-                    app.message = (
                         f"{playerCard.cardName} counters {enemyCard.cardName}!"
                     )
                     enemyCard.kill(app)
                     playerCard.reroute(app)
+                if enemyCard.cardName in getAllCounters(playerCard.cardName):
+                    app.message = (
+                        f"{enemyCard.cardName} counters {playerCard.cardName}!"
+                    )
+                    playerCard.kill(app)
+                    enemyCard.reroute(app)
 
 
 def initAdjacencyList(app):
@@ -1184,7 +1184,6 @@ def redrawAll(app, canvas):
         drawExitButton(app, canvas)
         if app.gameOver:
             drawRecap(app, canvas)
-
         else:
             drawBackgroundImage(app, canvas)
             drawBoard(app, canvas)

@@ -6,7 +6,7 @@ that allows a user to input a Clash Royale deck of their choice and receive a th
 
 The analyzer matches your deck up against 4 other popular decks in the game.
 It provides intelligent card suggestions for replacing the card in your deck
-that gets countered the most by the matchup decks. These cards suggestions
+that gets countered the most by the matchup decks. These card suggestions
 synergize well with the other cards in your deck.
 
 There is also a simulation component to the analyzer.

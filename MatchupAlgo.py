@@ -169,9 +169,7 @@ def getAllCounters(cardName):
         )
         return counters
     if cardName in heavySwarm:
-        counters = (
-            bigSpell + splash + singleTargetdps + heavySwarm + defensiveTowers
-        )
+        counters = bigSpell + splash + heavySwarm + defensiveTowers
         return counters
     if cardName in buildingRush:
         counters = swarm + singleTargetdps + spawnerBuildings + defensiveTowers
@@ -530,9 +528,7 @@ def isDiverseDeck(deck):
             winCount += 1
         elif card in groundCards:
             groundCount += 1
-    return (spellCount == 1 or spellCount == 2) and (
-        winCount >= 1 or groundCount >= 1
-    )
+    return 1 <= spellCount <= 3 and (winCount >= 1 or groundCount >= 1)
 
 
 # Backtracking helper which finds the best counter deck to the input deck

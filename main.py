@@ -1,6 +1,3 @@
-# from Card import *
-
-# from DeckInfo import *
 from MatchupAlgo import *
 from cmu_112_graphics import *
 from cardsInfo import *
@@ -8,16 +5,18 @@ from allCards import *
 import time
 import math
 
-import tkinter
-
 # From
-# https://stackoverflow.com/questions/42671252/
-# python-pillow-valueerror-decompressed-data-too-large
+# https://stackoverflow.com/questions/42671252/python-pillow-valueerror-decompressed-data-too-large
 # Used to remove limitation on max data to cache for photos
 from PIL import PngImagePlugin
 
 LARGE_ENOUGH_NUMBER = 100
 PngImagePlugin.MAX_TEXT_CHUNK = LARGE_ENOUGH_NUMBER * (1024 ** 2)
+
+# IMAGE CITATIONS:
+# Elixir.png from https://clashroyale.fandom.com/wiki/Elixir
+# arena.png from https://aminoapps.com/c/clash-royale/page/blog/first-battle-in-royale-arena/4G68_NWtYuN5qabloNDN1o8NW7X7KqwWkJ
+# All card info and images from data from clash royale API https://developer.clashroyale.com/#/
 
 # Simulation Model
 ################################################
@@ -252,11 +251,12 @@ def getTarget(app, row, col, team):
     ):
         gameOver(app)
     for tower in towers:
-        if (tower.health != 0) and (tower.isActive):
+        if tower.health != 0:
             distanceToTower = towerDistance(app, row, col, tower)
             if (bestTower == None) or distanceToTower < bestDistance:
                 bestTower = tower
                 bestDistance = distanceToTower
+    gameOver(app)
     return bestTower.target
 
 
@@ -450,12 +450,12 @@ def initAdjacencyList(app):
 
 
 def findBestPathBFS(app, start, target):
-    startRow, startCol = start
-    targetRow, targetCol = target
+    startRow, startCol = start[0], start[1]
+    targetRow, targetCol = target[0], target[1]
     queue = []
     path = []
-    queue.append([startRow, startCol, path])
     visited = set()
+    queue.append([startRow, startCol, path])
 
     while len(queue) > 0:
         currRow, currCol, path = queue.pop(0)
@@ -498,7 +498,10 @@ def damageTowersHelper(app, towerTeam):
     for tower in towerTeam:
         enemyAttackCount = 0
         for card in enemyTeam:
-            if (enemyTeam[card].row, enemyTeam[card].col) == tower.target:
+            if (
+                enemyTeam[card].row,
+                enemyTeam[card].col,
+            ) == tower.target and enemyTeam[card].isOnBoard:
                 enemyAttackCount += 1
         tower.attack(enemyAttackCount * 100)
         if towerTeam[0].health == 0 or towerTeam[1].health == 0:
@@ -630,7 +633,6 @@ def appStarted(app):
 
 def initImageMatrix(app, matchupObj):
     imageMatrx = [[0, 0, 0, 0], [0, 0, 0, 0]]
-    # Turn deck into 2d list
     deck = [[0, 0, 0, 0], [0, 0, 0, 0]]
     for i in range(len(matchupObj.matchup)):
         if i < 4:
@@ -947,7 +949,6 @@ def drawCounters(app, canvas):
         x, y = getCounterBounds(app, key)
         x += 50
         counteredCardName = app.analysis[key].counteredCard
-        # counterName = app.analysis[key].counters[0]
         counterNames = []
         if len(app.analysis[key].counters) <= 4:
             numberOfCounters = len(app.analysis[key].counters)
@@ -1155,7 +1156,7 @@ def drawSimulateButton(app, canvas):
         1070,
         app.height - 20,
         text="PRESS 'S' TO SIMULATE YOUR DECK",
-        fill="red",
+        fill="blue",
         font="Arial 18 bold",
     )
 
@@ -1179,14 +1180,6 @@ def redrawAll(app, canvas):
             drawClearButton(app, canvas)
     elif app.state == "analysis":
         drawAnalysisPopup(app, canvas)
-        # canvas.create_text(
-        #     app.width - 100,
-        #     100,
-        #     text=f"{app.analysis}",
-        #     font="Arial 10 bold",
-        #     anchor=NE,
-        #     fill="red",
-        # )
     elif app.state == "simulation":
         drawExitButton(app, canvas)
         if app.gameOver:
@@ -1309,12 +1302,6 @@ def drawBoard(app, canvas):
                 canvas.create_oval(x0 + r, y0 + r, x1 - r, y1 - r, fill="green")
             else:
                 canvas.create_oval(x0 + r, y0 + r, x1 - r, y1 - r, fill="gray")
-            # canvas.create_text(
-            #     average(x0, x1),
-            #     average(y0, y1),
-            #     text=f"({row},{col})",
-            #     font="Arial 5 bold",
-            # )
 
 
 def drawTeamCards(app, canvas, team):
@@ -1333,6 +1320,7 @@ def drawTeamCards(app, canvas, team):
 
 
 def drawBackgroundImage(app, canvas):
+    # IMAGE FROM https://aminoapps.com/c/clash-royale/page/blog/first-battle-in-royale-arena/4G68_NWtYuN5qabloNDN1o8NW7X7KqwWkJ
     canvas.create_image(
         app.newWidth // 2,
         app.newHeight // 2 + 90,

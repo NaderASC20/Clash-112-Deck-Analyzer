@@ -1,4 +1,4 @@
-# Compiled using data from clash royale API https://developer.clashroyale.com/#/
+# All card info and images from data from clash royale API https://developer.clashroyale.com/#/
 cardsInfo = {
     "Knight": {
         "key": "knight",

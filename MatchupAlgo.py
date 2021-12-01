@@ -1,4 +1,3 @@
-# from Card import *
 import copy
 from BroadCategories import *
 import random
@@ -208,9 +207,6 @@ def getAllCounters(cardName):
         return []
 
 
-# need small spell, big spell
-
-
 def getAllSynergies(cardName):
     if cardName in swarm:
         synergies = swarmHelperSpells + smallSpell
@@ -273,14 +269,12 @@ class Graph(object):
 def addCounterWeightings(cardCountersGraph, cardName, allCounters):
     for counter in allCounters:
         if counter != cardName:
-            # Add weight of 10 to signify hard counter
             cardCountersGraph.addEdge(cardName, counter, 10)
 
 
 def addSynergyWeightings(cardSynergiesGraph, cardName, allSynergies):
     for synergy in allSynergies:
         if synergy != cardName:
-            # Add with weight of 1 to signify nice synergy
             cardSynergiesGraph.addEdge(cardName, synergy, 1)
 
 
@@ -547,7 +541,7 @@ def findBestCounterDeck(matchup):
     return findBestCounterDeckHelper(counterDeckSoFar, matchup)
 
 
-# Backtracking function to find a counter deck
+# Backtracking function to find the best possible counter deck
 def findBestCounterDeckHelper(counterDeckSoFar, matchup):
     if len(counterDeckSoFar) == 8 and isDiverseDeck(counterDeckSoFar):
         return counterDeckSoFar
@@ -606,6 +600,3 @@ class Matchup(object):
     def __repr__(self):
         string = f"{', '.join(self.deck)}\nAverage elixir: {self.getAverageElixir(self.deck)}\n\t\t\tV.S.\n{', '.join(self.matchup)}\nAverage elixir: {self.getAverageElixir(matchup)}\n\nThe weakest card in your deck in this matchup is {self.counteredCard}.\n{self.counteredCard} get countered by \n{', '.join(self.counters)} from the opposing deck.\nWe suggest you replace {self.counteredCard} with {self.suggestion}.\n{self.suggestion} synergizes very well with \n{', '.join(self.suggestionBestSynergy)}.\n"
         return string
-
-
-# print(Matchup(deck, matchup))

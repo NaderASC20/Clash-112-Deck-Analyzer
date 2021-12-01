@@ -627,6 +627,7 @@ def appStarted(app):
     resetApp(app)
     app.cardImagesMatrix = initCardImages(app)
     app.analysis = None
+    # Elixir.png from https://clashroyale.fandom.com/wiki/Elixir
     app.elixir = app.loadImage("elixir.png")
     app.elixirImage = app.scaleImage(app.elixir, 0.20)
 
@@ -859,9 +860,12 @@ def mousePressed(app, event):
         ):
             resetApp(app)
             return
-    elif app.state == "analysis" or app.state == "simulation":
+    elif app.state == "analysis":
         if (app.width - 50 <= event.x <= app.width) and (0 <= event.y <= 50):
             app.state = "createDeck"
+    elif app.state == "simulation":
+        if (app.width - 50 <= event.x <= app.width) and (0 <= event.y <= 50):
+            app.state = "analysis"
     for row in range(app.cardArrayRows):
         for col in range(app.cardArrayCols):
             (x0, y0, x1, y1) = getDeckListBounds(app, row, col)
@@ -930,6 +934,7 @@ def drawMatchupDecks(app, canvas):
             text=str(app.matchupCounterAndSuggestionData[key]["matchupElixir"]),
             font="Arial 16 bold",
         )
+        # Elixir.png from https://clashroyale.fandom.com/wiki/Elixir
         canvas.create_image(
             x0 + 285,
             y0 + 80,
@@ -1137,6 +1142,7 @@ def drawMyDeck(app, canvas):
         font="Arial 16 bold",
         fill="black",
     )
+    # Elixir.png from https://clashroyale.fandom.com/wiki/Elixir
     canvas.create_image(
         758,
         app.height - 30,

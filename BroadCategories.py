@@ -2,10 +2,6 @@
 from cardsInfo import *
 from allCards import *
 
-#
-# Mostly Not in Use. Only category lists are being used for backtracking algorithm
-#
-
 # Cards separated by win condition, air troops, ground cards, and spell cards
 winCards = {
     "Hog Rider",

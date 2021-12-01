@@ -17,7 +17,7 @@ the matchup cards which may provide useful insight into the
 strategies they will choose when playing Clash Royale.
 
 INSTRUCTIONS:
-After running the app, simply click on a card image to add that card to your deck.
+Run Main.py. Simply click on a card image to add that card to your deck.
 Repeat until your deck is completely full. Once it is full, hit the big green
 "Analyze!" button that pops up. Once on the analysis screen, press the "s" key
 to view a simulation of your deck against the best possible matchup against your deck.

@@ -430,7 +430,7 @@ def getMatchupCounters(deck, matchup, weight):
 # Gets the card  in deck that is most countered by the matchup
 
 
-def getMostCounteredCardFromDeckAgainstMatchup(deck, matchup, weight=2):
+def getMostCounteredCardFromDeckAgainstMatchup(deck, matchup, weight=4):
     counters = getMatchupCounters(deck, matchup, weight)[1]
     counterCounts = {}
     counteredDict = {}

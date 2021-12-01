@@ -1,4 +1,3 @@
-from PIL.ImageDraw import Outline
 from cmu_112_graphics import *
 from MatchupAlgo import *
 
@@ -7,6 +6,7 @@ from cardsInfo import *
 from allCards import *
 from DeckInfo import *
 import time
+import math
 
 # From
 # https://stackoverflow.com/questions/42671252/
@@ -16,37 +16,8 @@ from PIL import PngImagePlugin
 
 LARGE_ENOUGH_NUMBER = 10000
 PngImagePlugin.MAX_TEXT_CHUNK = LARGE_ENOUGH_NUMBER * (2048 ** 2)
+
 # Model
-
-
-def repr2dList(L):
-    if L == []:
-        return "[]"
-    output = []
-    rows = len(L)
-    cols = max([len(L[row]) for row in range(rows)])
-    M = [[""] * cols for row in range(rows)]
-    for row in range(rows):
-        for col in range(len(L[row])):
-            M[row][col] = repr(L[row][col])
-    colWidths = [0] * cols
-    for col in range(cols):
-        colWidths[col] = max([len(M[row][col]) for row in range(rows)])
-    output.append("[\n")
-    for row in range(rows):
-        output.append(" [ ")
-        for col in range(cols):
-            if col > 0:
-                output.append(", " if col < len(L[row]) else "  ")
-            output.append(M[row][col].rjust(colWidths[col]))
-        output.append((" ]," if row < rows - 1 else " ]") + "\n")
-    output.append("]")
-    return "".join(output)
-
-
-def print2dList(L):
-    print(repr2dList(L))
-
 
 deck = [
     "Cannon",
@@ -71,148 +42,207 @@ matchup = [
 ]
 
 
+class LeftPrincessTower(object):
+    def __init__(self, team):
+        self.health = 2534
+        self.isDead = False
+        self.isActive = True
+        self.team = team
+        if self.team == "player":
+            self.target = (23, 2)
+        elif self.team == "enemy":
+            self.target = (8, 2)
+
+    def attack(self, damage):
+        self.health -= damage
+        if self.health <= 0:
+            self.isDead = True
+            self.health = 0
+
+    def __repr__(self):
+        return f"<{self.team} side left princess tower health={self.health}>"
+
+
+class RightPrincessTower(object):
+    def __init__(self, team):
+        self.health = 2534
+        self.isDead = False
+        self.isActive = True
+        self.team = team
+        if self.team == "player":
+            self.target = (23, 15)
+        elif self.team == "enemy":
+            self.target = (8, 15)
+
+    def attack(self, damage):
+        self.health -= damage
+        if self.health <= 0:
+            self.isDead = True
+            self.health = 0
+
+    def __repr__(self):
+        return f"<{self.team} side right princess tower health={self.health}>"
+
+
+class KingTower(object):
+    def __init__(self, team):
+        self.health = 2534
+        self.isDead = False
+        self.isActive = False
+        self.team = team
+        if self.team == "player":
+            self.target = (26, 8)
+        elif self.team == "enemy":
+            self.target = (5, 8)
+
+    def attack(self, damage):
+        self.health -= damage
+        if self.health <= 0:
+            self.isDead = True
+            self.health = 0
+
+    def __repr__(self):
+        return f"<{self.team} {self.isActive} active side king tower health={self.health}>"
+
+
 class Card(object):
     def __init__(self, cardName, team, app):
         self.cardName = cardName
         self.team = team
         if self.team == "enemy":
-            self.row = random.randint(0, 13)
+            self.row = random.randint(0, 15)
             self.col = random.randint(0, 17)
-            # self.route = findBestPath(app, self.row, self.col)
-            self.route = [(+1, 0)] * 20
+            while (
+                findBestPathBFS(
+                    app,
+                    (self.row, self.col),
+                    getTarget(app, self.row, self.col, self.team),
+                )
+                == None
+            ):
+                self.row = random.randint(0, 15)
+                self.col = random.randint(0, 17)
+            self.route = findBestPathBFS(
+                app,
+                (self.row, self.col),
+                getTarget(app, self.row, self.col, self.team),
+            )
         elif self.team == "player":
             self.row = random.randint(17, 31)
             self.col = random.randint(0, 17)
-            # self.route = findBestPath(app, self.row, self.col)
-            self.route = [(-1, 0)] * 20
+            while (
+                findBestPathBFS(
+                    app,
+                    (self.row, self.col),
+                    getTarget(app, self.row, self.col, self.team),
+                )
+                == None
+            ):
+                self.row = random.randint(17, 31)
+                self.col = random.randint(0, 17)
+            self.route = findBestPathBFS(
+                app,
+                (self.row, self.col),
+                getTarget(app, self.row, self.col, self.team),
+            )
+        if (
+            self.cardName in spawnerBuildings
+            or self.cardName in defensiveTowers
+        ):
+            self.route = [(self.row, self.col)]
         self.isOnCooldown = False
         self.isOnBoard = False
         self.cooldown = 0
 
     def move(self):
-        self.row += self.direction[0]
-        self.col += self.direction[1]
+        if self.route != []:
+            move = self.route[0]
+            self.row = move[0]
+            self.col = move[1]
+            self.route.pop(0)
 
     def spawn(self):
-        self.cooldown = 5
+        # print("spawning", self.cardName)
+        self.cooldown = 50
         self.isOnBoard = True
         self.isOnCooldown = True
 
     def updateCooldown(self):
+        self.cooldown -= 1
         if self.cooldown <= 0:
             self.isOnCooldown = False
             self.cooldown = 0
-        else:
-            self.cooldown -= 1
-            print(self.cardName, self.cooldown)
 
-    def __repr__(self):
-        str = f"<card={self.cardName}, team={self.team}, isOnBaord={self.isOnBoard}, pos={(self.row, self.col)}>, route={self.route}cooldown={self.cooldown}, isOnCooldown={self.isOnCooldown}"
-        return str
-
-
-def reconstruct(app, row, col, target, backwardsPath):
-    path = []
-    for row in range(app.rows - 1, -1, -1):
-        for col in range(app.cols - 1, -1, -1):
-            if backwardsPath[row][col] != None:
-                path.append(backwardsPath[row][col])
-    path.reverse()
-    return path
-
-
-# def getNeighbors(app, node):
-#     row, col = node
-#     neighbors = []
-#     for drow in (-1, 0, +1):
-#         for dcol in (-1, 0, +1):
-#             if drow == 0 and dcol == 0:
-#                 continue
-#             newRow, newCol = row + drow, col + dcol
-#             if (0 <= newRow <= app.rows - 1) and (0 <= newCol <= app.cols - 1):
-#                 neighbors.append((newRow, newCol))
-#     return neighbors
-
-
-def findPath(app, start, target):
-    # get queue / enqueue data structure?
-    # add row, col to queue
-    # make visited list full of 32 * 18 falses
-    # make prev list of 32 * 18 long None
-    # loop through while the list isn't empty
-    # get rid of first el of list (dequeue) -> this is our node
-    # get all neighbors of the node using agency list or matrix
-    # loop through all univsited neighbors
-    # enqueue the neighbor (put at end of list)
-    # make the neighbor as visited
-    # make prev list at this neighbor = node from before
-    # return prev list
-    queue = []
-    queue.append(start)
-    visited = [False] * 575
-    visited[start] = True
-    prev = [None] * 575
-    while len(queue) != 0:
-        node = queue.pop(0)
-        neighbors = app.adjancencyList[node]
-        if node == target:
-            return prev
-        for neighbor in neighbors:
-            if visited[neighbor] == False:
-                queue.append(neighbor)
-                visited[neighbor] = True
-                prev[neighbor] = node
-    return prev
-
-
-def bfs(app, row, col, target):
-    backwardsPath = findPath(app, row, col, target)
-    path = reconstruct(app, row, col, target, backwardsPath)
-    return path
-
-
-def findBestPath(app, row, col):
-    visited = []
-    # Middle of the bridge for now
-    targetRow, targetCol = 15, 3
-    target = (targetRow, targetCol)
-    return findBestPathHelper(app, row, col, target, visited)
-
-
-def findBestPathHelper(app, row, col, target, visited):
-    print(visited)
-    coords = (row, col)
-    if coords in visited:
-        return False
-    if coords == target:
-        return visited
-    visited.append(coords)
-    for drow in (-1, 0, +1):
-        for dcol in (-1, 0, +1):
-            if drow == 0 and dcol == 0:
-                continue
-            newRow = row + drow
-            newCol = col + dcol
-            if (
-                (0 <= newRow <= app.rows - 1)
-                and (0 <= newCol <= app.cols - 1)
-                and (app.board[newRow][newCol])
-            ):
-                solution = findBestPathHelper(
-                    app, newRow, newCol, target, visited
+    def kill(self, app):
+        self.isOnBoard = False
+        if self.team == "enemy":
+            self.row = random.randint(0, 15)
+            self.col = random.randint(0, 17)
+            while (
+                findBestPathBFS(
+                    app,
+                    (self.row, self.col),
+                    getTarget(app, self.row, self.col, self.team),
                 )
-                if solution != False:
-                    return solution
-    visited.remove((row, col))
-    return False
+                == None
+            ):
+                self.row = random.randint(0, 15)
+                self.col = random.randint(0, 17)
+            self.route = findBestPathBFS(
+                app,
+                (self.row, self.col),
+                getTarget(app, self.row, self.col, self.team),
+            )
+        elif self.team == "player":
+            self.row = random.randint(17, 31)
+            self.col = random.randint(0, 17)
+            while (
+                findBestPathBFS(
+                    app,
+                    (self.row, self.col),
+                    getTarget(app, self.row, self.col, self.team),
+                )
+                == None
+            ):
+                self.row = random.randint(17, 31)
+                self.col = random.randint(0, 17)
+            self.route = findBestPathBFS(
+                app,
+                (self.row, self.col),
+                getTarget(app, self.row, self.col, self.team),
+            )
+
+    def reroute(self, app):
+        self.route = findBestPathBFS(
+            app,
+            (self.row, self.col),
+            getTarget(app, self.row, self.col, self.team),
+        )
 
 
-class PrincessTower(object):
-    pass
+def getTarget(app, row, col, team):
+    towers = app.enemyTowers if team == "player" else app.playerTowers
+    bestDistance = None
+    bestTower = None
+    if (
+        towers[0].health == 0
+        and towers[1].health == 0
+        and towers[2].health == 0
+    ):
+        print("HITTING GAME OVER")
+        gameOver(app)
+    for tower in towers:
+        if (tower.health != 0) and (tower.isActive):
+            distanceToTower = towerDistance(app, row, col, tower)
+            if (bestTower == None) or distanceToTower <= bestDistance:
+                bestTower = tower
+                bestDistance = distanceToTower
+    return bestTower.target
 
 
-class KingTower(object):
-    pass
+def __repr__(self):
+    str = f"<card={self.cardName}, team={self.team}, isOnBaord={self.isOnBoard}, pos={(self.row, self.col)}>, route={self.route}cooldown={self.cooldown}, isOnCooldown={self.isOnCooldown}"
+    return str
 
 
 def average(x0, x1):
@@ -225,6 +255,26 @@ def initBoard(app):
         for col in range(app.cols):
             if (row <= 13 or row >= 17) or (col == 3 or col == 14):
                 board[row][col] = True
+            if (row == 0 or row == 31) and not (6 <= col <= 11):
+                board[row][col] = False
+            # King tower enemy side
+            if (1 <= row <= 4) and (7 <= col <= 10):
+                board[row][col] = False
+            # King tower player side
+            if (27 <= row <= 30) and (7 <= col <= 10):
+                board[row][col] = False
+            # Princess tower left enemy side
+            if (5 <= row <= 7) and (2 <= col <= 4):
+                board[row][col] = False
+            # Princess tower right enemy side
+            if (5 <= row <= 7) and (13 <= col <= 15):
+                board[row][col] = False
+            # Princess tower left player side
+            if (24 <= row <= 26) and (2 <= col <= 4):
+                board[row][col] = False
+            # Princess tower right player side
+            if (24 <= row <= 26) and (13 <= col <= 15):
+                board[row][col] = False
     return board
 
 
@@ -266,34 +316,45 @@ def executeCardRoutes(app):
     for team in teams:
         for cardName in team:
             cardObj = team[cardName]
-            if (cardObj.isOnBoard == True) and (len(cardObj.route) > 0):
-                move = cardObj.route[0]
-                cardObj.row += move[0]
-                cardObj.col += move[1]
-                cardObj.route.pop(0)
+            if cardObj.isOnBoard == True:
+                cardObj.move()
 
 
 def updateAllCooldowns(app):
-    teams = [app.playerCards, app.enemyCards]
-    for team in teams:
-        for cardName in team:
-            cardObj = team[cardName]
-            if (cardObj.cooldown != 0) and (cardObj.isOnCooldown):
-                cardObj.updateCooldown
+    team = app.playerCards
+    for cardName in team:
+        cardObj = team[cardName]
+        cardObj.updateCooldown()
+    team = app.enemyCards
+    for cardName in team:
+        cardObj = team[cardName]
+        cardObj.updateCooldown()
 
 
 def randomSpawn(app):
-    teams = [app.playerCards, app.enemyCards]
-    if (time.time() - app.spawnedTime) >= 1:
-        for team in teams:
-            teamList = (
-                app.playerDeck if team == app.playerCards else app.enemyDeck
-            )
-            index = random.randint(0, len(teamList) - 1)
-            cardName = teamList[index]
-            cardObj = team[cardName]
-            if cardObj.isOnCooldown == False:
-                cardObj.spawn()
+    teamInfo = app.playerCards
+    teamList = app.playerDeck
+    list = []
+    for card in teamList:
+        if teamInfo[card].isOnCooldown == False:
+            list.append(card)
+    if len(list) > 0:
+        index = random.randint(0, len(list) - 1)
+        cardName = list[index]
+        cardObj = teamInfo[cardName]
+        cardObj.spawn()
+        app.spawnedTime = time.time()
+    teamInfo = app.enemyCards
+    teamList = app.enemyDeck
+    list = []
+    for card in teamList:
+        if teamInfo[card].isOnCooldown == False:
+            list.append(card)
+    if len(list) > 0:
+        index = random.randint(0, len(list) - 1)
+        cardName = list[index]
+        cardObj = teamInfo[cardName]
+        cardObj.spawn()
         app.spawnedTime = time.time()
 
 
@@ -308,6 +369,43 @@ def getNumberedNeighbors(row, col, grid):
             ):
                 neighbors.append(grid[row + drow][col + dcol])
     return neighbors
+
+
+def cardDistance(app, cardObj1, cardObj2):
+    (player_x0, player_y0, player_x1, player_y1) = getCellBounds(
+        app, cardObj1.row, cardObj1.col
+    )
+    (x0, y0, x1, y1) = getCellBounds(app, cardObj2.row, cardObj2.col)
+    xPlayer, yPlayer = average(player_x0, player_x1), average(
+        player_y0, player_y1
+    )
+    xEnemy, yEnemy = average(x0, x1), average(y0, y1)
+    return math.sqrt((xEnemy - xPlayer) ** 2 + (yEnemy - yPlayer) ** 2)
+
+
+def towerDistance(app, row, col, tower):
+    (x0, y0, x1, y1) = getCellBounds(app, row, col)
+    xCards, yCard = average(x0, x1), average(y0, y1)
+    xTower, yTower = tower.target
+    return math.sqrt((xTower - xCards) ** 2 + (yTower - yCard) ** 2)
+
+
+def checkForDeaths(app):
+    for playerKey in app.playerCards:
+        for enemyKey in app.enemyCards:
+            playerCard = app.playerCards[playerKey]
+            enemyCard = app.enemyCards[enemyKey]
+            if (
+                playerCard.isOnBoard
+                and enemyCard.isOnBoard
+                and cardDistance(app, playerCard, enemyCard) <= (2 * 21)
+            ):
+                if playerCard.cardName in getAllCounters(enemyCard.cardName):
+                    # print(playerCard.cardName, "counters", enemyCard.cardName)
+                    playerCard.kill(app)
+                if enemyCard.cardName in getAllCounters(playerCard.cardName):
+                    # print(enemyCard.cardName, "counters", playerCard.cardName)
+                    enemyCard.kill(app)
 
 
 def initAdjacencyList(app):
@@ -326,12 +424,109 @@ def initAdjacencyList(app):
                 if number not in result:
                     result[number] = set()
                 result[number].add(neighbor)
-    print(result)
     return result
 
 
+def findBestPathBFS(app, start, target):
+    startRow, startCol = start
+    targetRow, targetCol = target
+    queue = []
+    path = []
+    queue.append([startRow, startCol, path])
+    visited = set()
+
+    while len(queue) > 0:
+        currRow, currCol, path = queue.pop(0)
+        if currRow == targetRow and currCol == targetCol:
+            return path
+        if app.board[currRow][currCol] != True:
+            continue
+        for drow in [-1, 0 + 1]:
+            for dcol in [-1, 0, +1]:
+                if drow == 0 and dcol == 0:
+                    continue
+                newRow = currRow + drow
+                newCol = currCol + dcol
+                if (
+                    (0 <= newRow <= app.rows - 1)
+                    and (0 <= newCol <= app.cols - 1)
+                    and ((newRow, newCol) not in visited)
+                ):
+                    newPath = path + [(newRow, newCol)]
+                    queue.append([newRow, newCol, newPath])
+                    visited.add((newRow, newCol))
+    return None
+
+
+def damageTowers(app):
+    towerTeam = "player"
+    damageTowersHelper(app, towerTeam)
+    towerTeam = "enemy"
+    damageTowersHelper(app, towerTeam)
+    return
+
+
+def damageTowersHelper(app, towerTeam):
+    if towerTeam == "player":
+        towerTeam = app.playerTowers
+        enemyTeam = app.enemyCards
+    elif towerTeam == "enemy":
+        towerTeam = app.enemyTowers
+        enemyTeam = app.playerCards
+    for tower in towerTeam:
+        # print(tower)
+        enemyAttackCount = 0
+        for card in enemyTeam:
+            if (enemyTeam[card].row, enemyTeam[card].col) == tower.target:
+                enemyAttackCount += 1
+        tower.attack(enemyAttackCount * 100)
+        if towerTeam[0].health == 0 or towerTeam[1].health == 0:
+            towerTeam[2].isActive = True
+        if towerTeam[2].health == 0:
+            gameOver(app)
+            print("HITTING GAME OVER")
+            break
+
+
+def refreshTargets(app):
+    team = app.playerCards
+    enemyTowers = app.enemyTowers
+    for cardName in team:
+        for tower in enemyTowers:
+            if (
+                team[cardName].row,
+                team[cardName].col,
+            ) == tower.target and tower.health == 0:
+                team[cardName].reroute(app)
+    team = app.enemyCards
+    enemyTowers = app.playerTowers
+    for cardName in team:
+        for tower in enemyTowers:
+            if (
+                team[cardName].row,
+                team[cardName].col,
+            ) == tower.target and tower.health == 0:
+                team[cardName].reroute(app)
+
+
+def gameOver(app):
+    print(app.enemyTowers)
+    if app.enemyTowers[2].health == 0:
+        app.winner = "player"
+        app.gameOver = True
+        print("PLAYER WON PLAYER WON!!!")
+        return
+    if app.playerTowers[2].health == 0:
+        app.winner = "enemy"
+        app.gameOver = True
+        print("ENEMY WON ENEMY WON!!!")
+        return
+
+
 def appStarted(app):
-    app.timerDelay = 300
+    app.gameOver = False
+    app.winner = None
+    app.timerDelay = 400
     app.margin = 20
     app.cols = 18
     app.rows = 32
@@ -339,15 +534,25 @@ def appStarted(app):
     app.allCardImages = initAllCardImages(app)
     app.playerCards = {}
     app.enemyCards = {}
+    app.playerTowers = [
+        LeftPrincessTower("player"),
+        RightPrincessTower("player"),
+        KingTower("player"),
+    ]
+    app.enemyTowers = [
+        LeftPrincessTower("enemy"),
+        RightPrincessTower("enemy"),
+        KingTower("enemy"),
+    ]
     app.playerDeck = deck
     app.enemyDeck = matchup
+    app.adjacencyList = initAdjacencyList(app)
     addTeamCards(app, deck, "player")
     addTeamCards(app, matchup, "enemy")
     app.spawnedTime = time.time()
     randomSpawn(app)
-    # print(app.playerCards["Cannon"])
-    app.adjancencyList = initAdjacencyList(app)
-    # print(bfs(app, 0, 0, (15, 3)))
+    app.arenaImage = app.loadImage("arena.png")
+    app.arenaImage = app.scaleImage(app.arenaImage, 0.88)
 
 
 # View
@@ -355,10 +560,17 @@ def drawBoard(app, canvas):
     for row in range(app.rows):
         for col in range(app.cols):
             (x0, y0, x1, y1) = getCellBounds(app, row, col)
-            if app.board[row][col]:
-                canvas.create_rectangle(x0, y0, x1, y1, fill="green")
+            r = 6
+            if app.board[row][col] == True:
+                canvas.create_oval(x0 + r, y0 + r, x1 - r, y1 - r, fill="green")
             else:
-                canvas.create_rectangle(x0, y0, x1, y1, fill="gray")
+                canvas.create_oval(x0 + r, y0 + r, x1 - r, y1 - r, fill="gray")
+            # canvas.create_text(
+            #     average(x0, x1),
+            #     average(y0, y1),
+            #     text=f"({row},{col})",
+            #     font="Arial 5 bold",
+            # )
 
 
 def drawTeamCards(app, canvas, team):
@@ -376,24 +588,68 @@ def drawTeamCards(app, canvas, team):
             )
 
 
-def redrawAll(app, canvas):
-    drawBoard(app, canvas)
-    drawTeamCards(app, canvas, "player")
-    drawTeamCards(app, canvas, "enemy")
-    for cell in app.playerCards["Cannon"].route:
-        x0, y0, x1, y1 = getCellBounds(
-            app, app.playerCards["Cannon"].row, app.playerCards["Cannon"].col
+def drawBackgroundImage(app, canvas):
+    canvas.create_image(
+        app.width // 2,
+        app.height // 2 + 90,
+        image=ImageTk.PhotoImage(app.arenaImage),
+    )
+
+
+def drawRecap(app, canvas):
+    if app.winner == "player":
+        canvas.create_text(
+            app.width // 2,
+            app.height // 2,
+            text="Your deck won!",
+            font="Arial 24 bold",
         )
-        canvas.create_rectangle(x0, y0, x1, y1, fill="orange")
-        x0, y0, x1, y1 = getCellBounds(app, cell[0], cell[1])
-        canvas.create_rectangle(x0, y0, x1, y1, fill="red")
+    else:
+        canvas.create_text(
+            app.width // 2,
+            app.height // 2,
+            text="Your deck lost :(",
+            font="Arial 24 bold",
+        )
+
+
+def drawAllPaths(app, canvas):
+    for cardName in app.playerCards:
+        route = app.playerCards[cardName].route
+        for coords in route:
+            (x0, y0, x1, y1) = getCellBounds(app, coords[0], coords[1])
+            r = 6
+            canvas.create_oval(x0 + r, y0 + r, x1 - r, y1 - r, fill="blue")
+    for cardName in app.enemyCards:
+        route = app.enemyCards[cardName].route
+        for coords in route:
+            (x0, y0, x1, y1) = getCellBounds(app, coords[0], coords[1])
+            canvas.create_oval(x0 + r, y0 + r, x1 - r, y1 - r, fill="red")
+
+
+def redrawAll(app, canvas):
+    if app.gameOver:
+        drawRecap(app, canvas)
+    else:
+        drawBackgroundImage(app, canvas)
+        drawBoard(app, canvas)
+        drawTeamCards(app, canvas, "player")
+        drawTeamCards(app, canvas, "enemy")
+        drawAllPaths(app, canvas)
 
 
 # Controller
 def timerFired(app):
-    updateAllCooldowns(app)
-    randomSpawn(app)
-    executeCardRoutes(app)
+    if app.gameOver == False:
+        executeCardRoutes(app)
+        checkForDeaths(app)
+        damageTowers(app)
+        gameOver(app)
+        refreshTargets(app)
+        updateAllCooldowns(app)
+        if (time.time() - app.spawnedTime) >= 3:
+            randomSpawn(app)
+            app.spawntedTime = time.time()
 
 
 def keyPressed(app, event):

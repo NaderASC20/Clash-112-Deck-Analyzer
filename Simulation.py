@@ -4,7 +4,7 @@ from MatchupAlgo import *
 # from Main import *
 from cardsInfo import *
 from allCards import *
-from DeckInfo import *
+from BroadCategories import *
 import time
 import math
 
@@ -219,6 +219,10 @@ class Card(object):
             getTarget(app, self.row, self.col, self.team),
         )
 
+    def __repr__(self):
+        str = f"<card={self.cardName}, team={self.team}, isOnBaord={self.isOnBoard}, pos={(self.row, self.col)}>, route={self.route}cooldown={self.cooldown}, isOnCooldown={self.isOnCooldown}"
+        return str
+
 
 def getTarget(app, row, col, team):
     towers = app.enemyTowers if team == "player" else app.playerTowers
@@ -238,11 +242,6 @@ def getTarget(app, row, col, team):
                 bestTower = tower
                 bestDistance = distanceToTower
     return bestTower.target
-
-
-def __repr__(self):
-    str = f"<card={self.cardName}, team={self.team}, isOnBaord={self.isOnBoard}, pos={(self.row, self.col)}>, route={self.route}cooldown={self.cooldown}, isOnCooldown={self.isOnCooldown}"
-    return str
 
 
 def average(x0, x1):

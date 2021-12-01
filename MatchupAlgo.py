@@ -1,6 +1,6 @@
-from Card import *
-
-from DeckInfo import *
+# from Card import *
+import copy
+from BroadCategories import *
 import random
 from cardsInfo import *
 from allCards import *
@@ -35,7 +35,7 @@ singleTargetdps = [
     "X-Bow",
 ]
 
-defensiveTowers = ["Cannon", "Inferno Tower", "Bomb Tower", "Tesla"]
+defensiveTowers = ["Cannon", "Inferno Tower", "Bomb Tower", "Tesla", "X-Bow"]
 
 splash = [
     "Archer Queen",
